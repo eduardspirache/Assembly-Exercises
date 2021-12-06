@@ -52,6 +52,7 @@ void test_rotp()
          reffile_name[25],
          *plaintext, *key, *ciphertext, *reftext;
     int len;
+
     for (int i = 0; i < ROTP_TESTS; i++)
     {
         prepare_files(file_prefix, infile_name, outfile_name, reffile_name, i, 0);
@@ -73,6 +74,7 @@ void test_rotp()
         fgetc(infile);
 
         rotp(ciphertext, plaintext, key, len);
+
         fwrite(ciphertext, sizeof(char), len, outfile);
 
         fread(reftext, sizeof(char), len, reffile);

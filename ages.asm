@@ -34,9 +34,15 @@ my_loop:
     mov eax, [esi + my_date.year]
     sub eax, [edi + ebx * my_date_size + my_date.year]
 
+    ;daca anul curent este mai mic decat anul nasterii
+    ;facem 0 elementul vectorului si sarim la finish
+    ;altfel continuam verificarea
     cmp eax, 0
-    jl finish
-
+    jg continue
+    mov [ecx + ebx * 4], dword 0
+    jmp finish
+    
+continue:
     mov [ecx + ebx * 4], eax
     ;comparam luna curenta cu luna nasterii
     ;daca este mai mica, inseamna ca nu a implinit varsta, asa ca scadem 1
@@ -44,10 +50,11 @@ my_loop:
     mov al, [esi + my_date.month]
     sub al, [edi + ebx * my_date_size + my_date.month]
     cmp al, 0
-    jg positive
+    jge equal
 negative:
     sub [ecx + ebx * 4], dword 1
-positive:
+    jmp finish
+equal:
     ;daca este mai mai mare sau egala, verificam daca este egala
     cmp al, 0
     jg finish
@@ -57,7 +64,7 @@ positive:
     mov al, [esi + my_date.day]
     sub al, [edi + ebx * my_date_size + my_date.day]
     cmp al, 0
-    jg finish
+    jge finish
     sub [ecx + ebx * 4], dword 1
 finish:
     add ebx, 1
