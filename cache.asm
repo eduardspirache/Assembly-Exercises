@@ -51,30 +51,27 @@ load:
 my_loop:
     ;; mutam in ebp tag-ul de la indexul tag_iterator si comparam cu tag-ul calculat
     ;; daca sunt egale, inseamna ca am gasit elementul cautat in cache, atunci suntem pe cazul Cache HIT
-
     mov ebp, &tag_iterator
-    mov ebp, [ebx + ebp]
-    cmp ebp, &tag
+    mov edi, &tag
+    cmp [ebx + ebp], edi
     je cache_hit
 
     ;; verificam daca tagul de la indexul nostru din tags este gol.
-    cmp ebp, 0x00
+    cmp [ebx + ebp], byte 0x00
     jne increment_29
 
     ;; daca este, incrementam cu 1 si continuam
-    mov ebp, &tag_iterator
-    add ebp, dword 1
+    add &tag_iterator, dword 1
     jmp continue_loop
 
     ;; daca nu este, incrementam cu 29 (lungimea tagului) si continuam
     increment_29:
-    mov ebp, &tag_iterator
-    add ebp, TAG_BITS
+    add &tag_iterator, dword TAG_BITS
     
     continue_loop:
-    mov &tag_iterator, ebp
     add &index, dword 1
-    cmp ebp, CACHE_LINES
+    mov ebp, &index
+    cmp ebp, dword CACHE_LINES
     jl my_loop
 
 ;;;;;;;;;;;;;;;;;;;;;; CACHE MISS ;;;;;;;;;;;;;;;;;;;;;;
@@ -114,16 +111,17 @@ cache_miss:
     mov &index, dword 0
     mov &tag_iterator, dword 0
     move_to_tags:
-        mov ebp, ebx
-        add ebp, &tag_iterator
-        cmp ebp, 0x00
+        mov ebp, &tag_iterator
+        cmp [ebx + ebp], byte 0x00
         jne increment29
 
         add &tag_iterator, dword 1
+        jmp re_loop
 
         increment29:
         add &tag_iterator, dword TAG_BITS
 
+        re_loop:
         add &index, dword 1
         cmp &index, edi
         jl move_to_tags
@@ -139,7 +137,7 @@ cache_miss:
 ;;;;;;;;;;;;;;;;;;;;;; CACHE HIT ;;;;;;;;;;;;;;;;;;;;;;
 cache_hit:
     mov edi, &index
-
+    
     ;; Inmultim indexul cu 8 (pentru ca cache-ul nostru are 8 bytes pe linie)
     mov &index, dword 0
     mov ebp, 0
