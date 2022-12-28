@@ -9,9 +9,7 @@ section .text
     global columnar_transposition
     extern printf
 
-;; void columnar_transposition(int key[], char *haystack, char *ciphertext);
 columnar_transposition:
-    ;; DO NOT MODIFY
     push    ebp
     mov     ebp, esp
     pusha 
@@ -19,10 +17,7 @@ columnar_transposition:
     mov edi, [ebp + 8]   ;key
     mov esi, [ebp + 12]  ;haystack
     mov ebx, [ebp + 16]  ;ciphertext
-    ;; DO NOT MODIFY
 
-    ;; TODO: Implment columnar_transposition
-    ;; FREESTYLE STARTS HERE
     mov &key_iterator, dword 0
     mov &hay_iterator, dword 0
     mov &cipher_iterator, dword 0
@@ -38,11 +33,9 @@ iterate_key:
         mov dl, [esi + ecx] ;; ebp = haystack[hay_iterator]
         mov [ebx + eax], dl ;; cipher[chiper_iterator] = haystack[hay_iterator]
 
-
-
         add &cipher_iterator, dword 1 ;; cipher_iterator++
         
-        ;; Conditii oprire iterate_haystack ;;
+        ;; Halt conditions for iterate_haystack ;;
         mov ebp, &hay_iterator ;; ebp = hay_iterator
         add ebp, &len_cheie ;; ebp = hay_iterator + len_cheie
         mov &hay_iterator, ebp ;; hay_iterator = hay_iterator + len_cheie
@@ -51,16 +44,13 @@ iterate_key:
         cmp &hay_iterator, eax ;; hay_iterator < len_haystack
         jl iterate_haystack
     
-    ;; Conditii oprire iterate_key ;;
+    ;; Halt conditions for iterate_key ;;
     add &key_iterator, dword 1 ;; key_iterator ++ (int)
     
     mov eax, &len_cheie ;; eax = len_cheie
     cmp &key_iterator, eax ;; key_iterator < len_cheie
     jl iterate_key
 
-    ;; FREESTYLE ENDS HERE
-    ;; DO NOT MODIFY
     popa
     leave
     ret
-    ;; DO NOT MODIFY

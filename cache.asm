@@ -1,5 +1,4 @@
 %include "./io.mac"
-;; defining constants, you can use these as immediate values in your code
 CACHE_LINES  EQU 100
 CACHE_LINE_SIZE EQU 8
 OFFSET_BITS  EQU 3
@@ -18,9 +17,7 @@ section .text
     global load
     extern printf
 
-;; void load(char* reg, char** tags, char cache[CACHE_LINES][CACHE_LINE_SIZE], char* address, int to_replace);
 load:
-    ;; DO NOT MODIFY
     push ebp
     mov ebp, esp
     pusha
@@ -30,41 +27,41 @@ load:
     mov ecx, [ebp + 16] ; cache
     mov edx, [ebp + 20] ; address
     mov edi, [ebp + 24] ; to_replace (index of the cache line that needs to be replaced in case of a cache MISS)
-    ;; DO NOT MODIFY
-    ;; TODO: Implment load
-    ;; FREESTYLE STARTS HERE
+
     mov &to_replace, edi
     mov &tag_iterator, dword 0
     mov &index, dword 0
    
-    ;; Calculam tag-ul -> Pas1
+    ;; - First step: We calculate the tag
     mov ebp, dword edx
     shr ebp, 3
     mov &tag, ebp
-    ;; Calculam offset
+    ;; - Calculate offset
     mov ebp, dword edx
     and ebp, 7
     mov &offset, ebp
 
-    ;; Iteram prin taguri si comparam cu tag-ul nostru calculat. Daca il gasim pe pozitia i, avem Cache HIT =>
-    ;; aducem din cache in registru valoarea cache[i][offset]
+    ;; - Iterate through tags and compare them to the tag we calculated. 
+    ;; - If it is found on position "i", it is a "Cache HIT".
+    ;; - We populate the register with the value cache[i][offset]
 my_loop:
     ;; mutam in ebp tag-ul de la indexul tag_iterator si comparam cu tag-ul calculat
-    ;; daca sunt egale, inseamna ca am gasit elementul cautat in cache, atunci suntem pe cazul Cache HIT
+    ;; - Move to EBP the tag found at the index tag_iterator and compare it with the calculated tag
+    ;; - If they are equal, we found the element searched in cahce, so it is the case "Cache HIT"
     mov ebp, &tag_iterator
     mov edi, &tag
     cmp [ebx + ebp], edi
     je cache_hit
 
-    ;; verificam daca tagul de la indexul nostru din tags este gol.
+    ;; Verify that the tag found at the searched index is empty.
     cmp [ebx + ebp], byte 0x00
     jne increment_29
 
-    ;; daca este, incrementam cu 1 si continuam
+    ;; If it is empty, we increment by 1 and move on.
     add &tag_iterator, dword 1
     jmp continue_loop
 
-    ;; daca nu este, incrementam cu 29 (lungimea tagului) si continuam
+    ;; If it isn't, we increment by 29 (tag's length) and move on.
     increment_29:
     add &tag_iterator, dword TAG_BITS
     
@@ -77,9 +74,9 @@ my_loop:
 ;;;;;;;;;;;;;;;;;;;;;; CACHE MISS ;;;;;;;;;;;;;;;;;;;;;;
     mov ebp, &tag
     shl ebp, 3
-    mov &start_address, ebp ;; adresa de start este tagul cu 000 la final
+    mov &start_address, ebp
 
-    ;; vrem sa multiplicam indexul to_replace cu 8 pentru a ajunge la linia to_replace din cache
+    ;; The goal is to multiply to_replace index by 8 to get to the to_replace line from cache.
     mov &index, dword 0
     mov ebp, 0
     multiply_to_8:
@@ -91,22 +88,22 @@ my_loop:
 
     mov &index, dword 0
 cache_miss:
-    ;; mut in cache[multiplied_to_replace][index] start address
+    ;; Move in cache[multiplied_to_replace][index] the start address.
     mov ebp, &index
     add ebp, &multiplied_to_replace
     mov edi, &start_address
     mov edi, [edi]
     mov [ecx + ebp], edi
-    ;; incrementez start address cu cate 1 bit
+    ;; Increment start address by 1 bit at a time
     add &start_address, dword 1
 
-    ;; incrementez indexul si repet de 8 ori
+    ;; Increment the index and repeat the process 8 times
     add &index, dword 1
     cmp &index, dword 8
     jl cache_miss
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    ;; Iterez prin tag-uri pana ajung la to_replace
+    ;; Iterate through the tags until we reach to_replace
     mov edi, &to_replace
     mov &index, dword 0
     mov &tag_iterator, dword 0
@@ -126,19 +123,19 @@ cache_miss:
         cmp &index, edi
         jl move_to_tags
     
-    ;; Mut in tags[to_replace] tag-ul
+    ;; Move in tags[to_replace] the tag
     mov edi, &tag_iterator
     mov ebp, &tag
     mov [ebx + edi], ebp
-    
-    ;; Facem indexul to_replace pentru a putea muta in registru cache[i][offset]
+
+    ;; Make the current index take to_replace's value to move cache[i][offset] in the register
     mov edi, &to_replace
     mov &index, edi
 ;;;;;;;;;;;;;;;;;;;;;; CACHE HIT ;;;;;;;;;;;;;;;;;;;;;;
 cache_hit:
     mov edi, &index
     
-    ;; Inmultim indexul cu 8 (pentru ca cache-ul nostru are 8 bytes pe linie)
+    ;; Multiply the index by 8 (because the cache has 8 bytes on each line)
     mov &index, dword 0
     mov ebp, 0
     multiply8:
@@ -148,17 +145,15 @@ cache_hit:
         jl multiply8
     mov &index, ebp
     
-    ; Mutam in registru cache[index][offset]
+    ; Move cache[index][offset] in the register 
     mov ebp, &index
     add ebp, &offset
     mov ebp, [ecx + ebp]
     mov [eax], ebp
 
-    ;; FREESTYLE ENDS HERE
-    ;; DO NOT MODIFY
     popa
     leave
     ret
-    ;; DO NOT MODIFY
+
 
 
